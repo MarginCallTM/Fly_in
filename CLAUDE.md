@@ -190,6 +190,10 @@ D1-goal D2-goal
 - Générer du code sans l'expliquer
 - Utiliser une librairie de graphes
 - Oublier les type hints ou les docstrings
+- Écrire des type hints complexes sur plusieurs lignes ou avec des commentaires
+  explicatifs — les types doivent être lisibles en un coup d'œil sur une seule
+  ligne (ex: `Optional[str]`, `dict[str, int]`, `list[Zone]`). Si un type hint
+  nécessite une explication, c'est qu'il faut simplifier la conception.
 - Proposer du code qui ne passerait pas flake8 ou mypy
 - Faire des fonctions de plus de 20-25 lignes sans justification
 - Utiliser des variables sans signification (`x`, `tmp`, `data` — être explicite)

@@ -17,14 +17,14 @@ clean:
 	find . -name "*.pyo" -delete
 
 lint:
-	flake8 . --exclude=venv,__pycache__ && \
+	flake8 . --exclude=.venv,__pycache__ && \
 	mypy . --warn-return-any \
 	       --warn-unused-ignores \
 	       --ignore-missing-imports \
 	       --disallow-untyped-defs \
 	       --check-untyped-defs \
-	       --exclude venv
+	       --exclude .venv
 
 lint-strict:
-	flake8 . --exclude=venv,__pycache__ && \
-	mypy . --strict --exclude venv
+	flake8 . --exclude=.venv,__pycache__ && \
+	mypy . --strict --exclude .venv

@@ -41,10 +41,10 @@ PHASE 0 — SETUP DU PROJET
 [x] 0.5  Rédiger le Makefile avec les règles imposées :
          - install, run, debug, clean, lint, lint-strict ✓
 
-[ ] 0.6  Extraire maps.tar.gz dans maps/ :
+[x] 0.6  Extraire maps.tar.gz dans maps/ :
          → tar -xzf maps.tar.gz
 
-[ ] 0.7  Vérifier que `make lint` tourne (sur fichiers vides)
+[x] 0.7  Vérifier que `make lint` tourne (sur fichiers vides)
 
 --------------------------------------------------------------------------------
 PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
