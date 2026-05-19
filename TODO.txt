@@ -11,53 +11,46 @@ Légende :
 PHASE 0 — SETUP DU PROJET
 --------------------------------------------------------------------------------
 
-[ ] 0.1  Créer l'arborescence du projet (TOUT À PLAT) :
+[x] 0.1  Créer l'arborescence du projet (TOUT À PLAT) :
          fly_in/
-         ├── main.py
-         ├── Makefile
-         ├── README.md
-         ├── .gitignore
-         ├── requirements.txt
-         ├── map_parser.py
-         ├── zone.py
-         ├── connection.py
-         ├── drone.py
-         ├── graph.py
-         ├── router.py        (pathfinding)
-         ├── simulator.py
-         ├── renderer.py      (display)
-         ├── test_*.py        (tests pytest, à la racine eux aussi)
-         └── maps/            (UNIQUE sous-dossier — données, pas code)
-             └── *.txt
-         (!) Sujet chap. X : "Place all your files at the root of your
-             repository" — choix interprétation stricte = aucun sous-dossier
-             de code, seulement maps/ pour les données de test.
+         ├── main.py          ← créé (vide)
+         ├── Makefile         ← créé (vide)
+         ├── README.md        ← créé (vide)
+         ├── .gitignore       ← créé (vide)
+         ├── requirements.txt ← créé (vide)
+         ├── map_parser.py    ← créé (vide)
+         ├── zone.py          ← créé (vide)
+         ├── connection.py    ← créé (vide)
+         ├── drone.py         ← créé (vide)
+         ├── graph.py         ← créé (vide)
+         ├── router.py        ← créé (vide)
+         ├── simulator.py     ← créé (vide)
+         ├── renderer.py      ← créé (vide)
+         ├── test_.py         ← créé (vide) — à renommer test_*.py
+         ├── maps.tar.gz      ← cartes officielles du sujet (à extraire)
+         └── maps/            ← dossier créé (vide pour l'instant)
 
-[ ] 0.2  Créer .gitignore : __pycache__/, .mypy_cache/, .pytest_cache/,
-         venv/, *.pyc, .DS_Store
+[x] 0.2  Remplir .gitignore : __pycache__/, .mypy_cache/, .pytest_cache/,
+         venv/, *.pyc, .DS_Store, maps.tar.gz
 
-[ ] 0.3  Créer requirements.txt : flake8, mypy, pytest, (optionnel: rich,
-         matplotlib, colorama pour l'affichage)
+[x] 0.3  Remplir requirements.txt : flake8, mypy, pytest, colorama
 
-[ ] 0.4  Créer un venv (python3 -m venv venv) et l'activer
+[x] 0.4  Créer un venv (.venv) et l'activer + make install
+         → python3 -m venv .venv && source .venv/bin/activate && make install
 
-[ ] 0.5  Rédiger le Makefile avec les règles imposées :
-         - install      : pip install -r requirements.txt
-         - run          : python main.py <map_file>
-         - debug        : python -m pdb main.py <map_file>
-         - clean        : rm -rf __pycache__ .mypy_cache .pytest_cache
-         - lint         : flake8 . && mypy . --warn-return-any
-                          --warn-unused-ignores --ignore-missing-imports
-                          --disallow-untyped-defs --check-untyped-defs
-         - lint-strict  : flake8 . && mypy . --strict
+[x] 0.5  Rédiger le Makefile avec les règles imposées :
+         - install, run, debug, clean, lint, lint-strict ✓
 
-[ ] 0.6  Vérifier que `make lint` tourne sur un projet vide
+[ ] 0.6  Extraire maps.tar.gz dans maps/ :
+         → tar -xzf maps.tar.gz
+
+[ ] 0.7  Vérifier que `make lint` tourne (sur fichiers vides)
 
 --------------------------------------------------------------------------------
-PHASE 1 — MODÈLES DE DONNÉES (models/)
+PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
 --------------------------------------------------------------------------------
 
-[ ] 1.1  models/zone.py :
+[ ] 1.1  zone.py :
          - Enum ZoneType { NORMAL, BLOCKED, RESTRICTED, PRIORITY }
          - Classe Zone (dataclass) : name, x, y, zone_type, color,
            max_drones, current_drones (set/list)
@@ -65,7 +58,7 @@ PHASE 1 — MODÈLES DE DONNÉES (models/)
            movement_cost() (1 pour normal/priority, 2 pour restricted)
          (!) start et end ont capacité illimitée — flag is_start/is_end
 
-[ ] 1.2  models/connection.py :
+[ ] 1.2  connection.py :
          - Classe Connection : zone_a, zone_b, max_link_capacity,
            drones_in_transit
          - Méthodes : connects(zone_name), other_end(zone_name),
@@ -73,13 +66,13 @@ PHASE 1 — MODÈLES DE DONNÉES (models/)
          - __eq__ et __hash__ symétriques (a-b == b-a)
          (!) Sujet VII.4 : duplicates a-b et b-a interdits
 
-[ ] 1.3  models/drone.py :
+[ ] 1.3  drone.py :
          - Enum DroneStatus { AT_START, MOVING, IN_TRANSIT, ARRIVED }
          - Classe Drone : id, current_zone, planned_path (list[Zone]),
            path_index, status, in_transit_connection, turns_remaining_transit
          - Méthodes : next_zone(), is_arrived(), start_transit(), tick_transit()
 
-[ ] 1.4  models/graph.py :
+[ ] 1.4  graph.py :
          - Classe Graph : zones dict[str, Zone], connections list[Connection],
            start_hub, end_hub
          - Méthodes : add_zone(), add_connection(), get_zone(),
@@ -89,7 +82,7 @@ PHASE 1 — MODÈLES DE DONNÉES (models/)
          (!) Aucune librairie graphes — tout from scratch
 
 --------------------------------------------------------------------------------
-PHASE 2 — PARSER (parser/map_parser.py)
+PHASE 2 — PARSER (map_parser.py)
 --------------------------------------------------------------------------------
 
 [ ] 2.1  Classe MapParser avec méthode parse(filepath) -> Graph
@@ -124,7 +117,7 @@ PHASE 2 — PARSER (parser/map_parser.py)
          (!) Sujet VII.4 : "stop the program and return a clear error message
              indicating the line and cause"
 
-[ ] 2.9  Tests unitaires (tests/test_parser.py) :
+[ ] 2.9  Tests unitaires dans test_.py (ou renommer test_parser.py) :
          - Cartes valides minimales
          - Erreurs : double start, type invalide, connexion dupliquée,
            connexion vers zone inexistante, capacité négative, tiret dans nom
@@ -133,21 +126,38 @@ PHASE 2 — PARSER (parser/map_parser.py)
 PHASE 3 — CARTES DE TEST (maps/)
 --------------------------------------------------------------------------------
 
-[ ] 3.1  maps/easy_linear.txt — chemin linéaire, 2 drones
-[ ] 3.2  maps/easy_fork.txt   — fork simple, 4 drones
-[ ] 3.3  maps/easy_capacity.txt — test max_drones / max_link_capacity
-[ ] 3.4  maps/medium_deadend.txt — dead end, 5 drones
-[ ] 3.5  maps/medium_loop.txt — boucle, 6 drones
-[ ] 3.6  maps/medium_priority.txt — test zones priority, 5 drones
-[ ] 3.7  maps/hard_maze.txt — labyrinthe, 8 drones
-[ ] 3.8  maps/hard_capacity.txt — bottlenecks, 12 drones
-[ ] 3.9  maps/hard_ultimate.txt — 15 drones
-[ ] 3.10 maps/invalid_*.txt — erreurs parser variées (au moins 5 cas)
-[ ] 3.11 maps/edge_*.txt — un seul drone, 1000 drones, zone blocked
-         (B) maps/challenger_impossible_dream.txt — 25 drones
+[ ] 3.1  Extraire maps.tar.gz dans maps/ :
+         tar -xzf maps.tar.gz
+         Résultat attendu :
+         maps/easy/01_linear_path.txt       (2 drones)
+         maps/easy/02_simple_fork.txt       (4 drones)
+         maps/easy/03_basic_capacity.txt    (4 drones)
+         maps/medium/01_dead_end_trap.txt   (5 drones)
+         maps/medium/02_circular_loop.txt   (6 drones)
+         maps/medium/03_priority_puzzle.txt (5 drones)
+         maps/hard/01_maze_nightmare.txt    (8 drones)
+         maps/hard/02_capacity_hell.txt     (12 drones)
+         maps/hard/03_ultimate_challenge.txt (15 drones)
+         maps/challenger/01_the_impossible_dream.txt (25 drones)
+
+[ ] 3.2  Lire et comprendre chaque carte officielle avant de coder
+         (valider manuellement que le format correspond bien au sujet)
+
+[ ] 3.3  Créer des cartes d'erreur pour tester le parser :
+         maps/invalid/double_start.txt
+         maps/invalid/bad_zone_type.txt
+         maps/invalid/duplicate_connection.txt
+         maps/invalid/unknown_zone_in_connection.txt
+         maps/invalid/negative_capacity.txt
+         maps/invalid/dash_in_name.txt
+
+[ ] 3.4  Créer des cartes edge case :
+         maps/edge/one_drone.txt      — 1 seul drone
+         maps/edge/direct_path.txt    — start connecté directement à end
+         maps/edge/blocked_only.txt   — seul chemin bloque (no solution)
 
 --------------------------------------------------------------------------------
-PHASE 4 — PATHFINDING (pathfinding/router.py)
+PHASE 4 — PATHFINDING (router.py)
 --------------------------------------------------------------------------------
 
 [ ] 4.1  Implémenter Dijkstra from scratch (avec heapq autorisé) :
@@ -176,7 +186,7 @@ PHASE 4 — PATHFINDING (pathfinding/router.py)
          priorité aux priority
 
 --------------------------------------------------------------------------------
-PHASE 5 — MOTEUR DE SIMULATION (simulation/simulator.py)
+PHASE 5 — MOTEUR DE SIMULATION (simulator.py)
 --------------------------------------------------------------------------------
 
 [ ] 5.1  Classe Simulator :
@@ -219,7 +229,7 @@ PHASE 5 — MOTEUR DE SIMULATION (simulation/simulator.py)
          - Pas de collision
 
 --------------------------------------------------------------------------------
-PHASE 6 — AFFICHAGE (display/renderer.py)
+PHASE 6 — AFFICHAGE (renderer.py)
 --------------------------------------------------------------------------------
 
 [ ] 6.1  Classe Renderer :

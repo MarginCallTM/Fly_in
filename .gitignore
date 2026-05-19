@@ -1,0 +1,27 @@
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Type checker & linter caches
+.mypy_cache/
+.flake8_cache/
+
+# Test cache
+.pytest_cache/
+
+# Virtual environment
+venv/
+.venv/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Archive des cartes (déjà extraite dans maps/)
+maps.tar.gz
