@@ -58,7 +58,7 @@ PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
            movement_cost() (1 pour normal/priority, 2 pour restricted)
          (!) start et end ont capacité illimitée — flag is_start/is_end
 
-[ ] 1.2  connection.py :
+[~] 1.2  connection.py :
          - Classe Connection : zone_a, zone_b, max_link_capacity,
            drones_in_transit
          - Méthodes : connects(zone_name), other_end(zone_name),
