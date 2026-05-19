@@ -50,7 +50,7 @@ PHASE 0 — SETUP DU PROJET
 PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
 --------------------------------------------------------------------------------
 
-[ ] 1.1  zone.py :
+[x] 1.1  zone.py :
          - Enum ZoneType { NORMAL, BLOCKED, RESTRICTED, PRIORITY }
          - Classe Zone (dataclass) : name, x, y, zone_type, color,
            max_drones, current_drones (set/list)
@@ -248,6 +248,37 @@ PHASE 6 — AFFICHAGE (renderer.py)
 
 [ ] 6.4  Mode summary final : nombre de tours, drones livrés par tour,
          coût total
+
+================================================================================
+  >>> MEMO PERSONNEL — QUÊTE SECONDAIRE : VISUALISATION 3D <<<
+================================================================================
+  Idée à réaliser APRÈS avoir terminé le rendu terminal obligatoire (6.1-6.2)
+  et SI il reste du temps avant la deadline.
+
+  Concept : visualisation 3D espace-temps avec matplotlib (mpl_toolkits.mplot3d)
+    - Axes X, Y : coordonnées des zones depuis la carte
+    - Axe Z     : numéro du tour de simulation
+    - Résultat  : les trajectoires des drones apparaissent comme des lignes 3D
+                  qui montent dans le temps — on voit visuellement les chemins
+                  empruntés, les croisements, les attentes, les goulots.
+
+  Pourquoi c'est intéressant :
+    - matplotlib est déjà dans requirements.txt (pas de nouvelle dépendance)
+    - Permet de comprendre d'un coup d'œil la stratégie de routing
+    - Excellent visuel à montrer en peer review
+    - Aucun conflit avec le sujet (pas de librairie de graphes utilisée)
+
+  À noter :
+    - PAS de points bonus officiels (le bonus chap. IX ne couvre que la perf
+      et la Challenger map). C'est une quête secondaire personnelle.
+    - Ne pas commencer avant que tout le mandatory (phases 1-7) soit validé.
+
+  Pistes d'implémentation :
+    - Classe Renderer3D séparée du renderer terminal
+    - Méthode render_simulation(history) qui dessine TOUTES les trajectoires
+    - Couleur par drone, marqueurs aux zones, légende
+    - Option : animation step-by-step avec matplotlib.animation
+================================================================================
 
 --------------------------------------------------------------------------------
 PHASE 7 — POINT D'ENTRÉE (main.py)
