@@ -14,10 +14,11 @@ class Graph:
     add all zones first, then connections. Call validate() once
     the graph is fully assembled.
 
-    Attributions:
-        Zones: Zone objects indexed by name for O(1) lookup.
-        connections: All edges in the graph/
-        start_hub: The unique arrival zone (set by add_zone).
+    Attributes:
+        zones: Zone objects indexed by name for O(1) lookup.
+        connections: All edges in the graph.
+        start_hub: The unique departure zone (set by add_zone).
+        end_hub: The unique arrival zone (set by add_zone).
     """
 
     def __init__(self) -> None:
@@ -35,7 +36,7 @@ class Graph:
 
         Raises:
             ValueError: If the name is already taken, or if a
-            second start/end hub is added.
+                second start/end hub is added.
         """
         if zone.name in self.zones:
             raise ValueError(
@@ -58,8 +59,8 @@ class Graph:
             conn: The connection to add.
 
         Raises:
-            ValueError: If an endpoint zone is unknow, or if an
-                equivalent connection (a-b or b-a) already exits.
+            ValueError: If an endpoint zone is unknown, or if an
+                equivalent connection (a-b or b-a) already exists.
         """
         for zone_name in (conn.zone_a, conn.zone_b):
             if zone_name not in self.zones:
@@ -100,8 +101,8 @@ class Graph:
         neighbors: list[Zone] = []
         for conn in self.connections:
             if conn.connects(zone_name):
-                neighbors_name = conn.other_end(zone_name)
-                neighbors.append(self.zones[neighbors_name])
+                neighbor_name = conn.other_end(zone_name)
+                neighbors.append(self.zones[neighbor_name])
         return neighbors
 
     def get_connection(
@@ -110,7 +111,7 @@ class Graph:
         """Find the connection between two zones (order-independent)
 
         Args:
-            z1: Name of the endpoint.
+            z1: Name of one endpoint.
             z2: Name of the other endpoint.
 
         Returns: The connection object, or None if not found.

@@ -47,9 +47,9 @@ PHASE 0 — SETUP DU PROJET
 [x] 0.7  Vérifier que `make lint` tourne (sur fichiers vides)
 
   --- Tests de validation PHASE 0 ---
-[ ] T0.1  `make lint` → 0 erreurs flake8 et mypy sur tous les fichiers
-[ ] T0.2  `make install` → flake8, mypy, pytest, colorama bien installés
-[ ] T0.3  `ls maps/` → les 10 cartes officielles présentes
+[x] T0.1  `make lint` → 0 erreurs flake8 et mypy sur tous les fichiers
+[x] T0.2  `make install` → flake8, mypy, pytest, colorama bien installés
+[x] T0.3  `ls maps/` → les 10 cartes officielles présentes
           (easy x3, medium x3, hard x3, challenger x1)
 
 --------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
            path_index, status, in_transit_connection, turns_remaining_transit
          - Méthodes : next_zone(), is_arrived(), start_transit(), tick_transit()
 
-[ ] 1.4  graph.py :
+[x] 1.4  graph.py :
          - Classe Graph : zones dict[str, Zone], connections list[Connection],
            start_hub, end_hub
          - Méthodes : add_zone(), add_connection(), get_zone(),
@@ -89,28 +89,28 @@ PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
 
   --- Tests de validation PHASE 1 ---
   zone.py
-[ ] T1.1  ZoneType : 4 valeurs (NORMAL, BLOCKED, RESTRICTED, PRIORITY)
-[ ] T1.2  movement_cost() : RESTRICTED → 2, tous les autres → 1
-[ ] T1.3  is_full() : jamais True si is_start ou is_end
-[ ] T1.4  is_full() : True quand occupancy >= max_drones
-[ ] T1.5  add_drone() : lève ValueError si zone blocked ou pleine
-[ ] T1.6  remove_drone() : lève KeyError si drone_id absent
+[x] T1.1  ZoneType : 4 valeurs (NORMAL, BLOCKED, RESTRICTED, PRIORITY)
+[x] T1.2  movement_cost() : RESTRICTED → 2, tous les autres → 1
+[x] T1.3  is_full() : jamais True si is_start ou is_end
+[x] T1.4  is_full() : True quand occupancy >= max_drones
+[x] T1.5  add_drone() : lève ValueError si zone blocked ou pleine
+[x] T1.6  remove_drone() : lève KeyError si drone_id absent
   connection.py
-[ ] T1.7  connects() : True pour zone_a et zone_b, False pour autre nom
-[ ] T1.8  other_end() : retourne l'opposé ; lève ValueError si inconnu
-[ ] T1.9  occupy() + has_capacity() + release() : cycle complet
-[ ] T1.10 __eq__ et __hash__ : a-b == b-a ; set déduplique a-b/b-a
+[x] T1.7  connects() : True pour zone_a et zone_b, False pour autre nom
+[x] T1.8  other_end() : retourne l'opposé ; lève ValueError si inconnu
+[x] T1.9  occupy() + has_capacity() + release() : cycle complet
+[x] T1.10 __eq__ et __hash__ : a-b == b-a ; set déduplique a-b/b-a
   drone.py
-[ ] T1.11 next_zone() : None si path vide ou si déjà à la dernière zone
-[ ] T1.12 start_transit() + tick_transit() : 1 tick → retourne True
-[ ] T1.13 is_arrived() : False par défaut, True si status ARRIVED
+[x] T1.11 next_zone() : None si path vide ou si déjà à la dernière zone
+[x] T1.12 start_transit() + tick_transit() : 1 tick → retourne True
+[x] T1.13 is_arrived() : False par défaut, True si status ARRIVED
   graph.py
-[ ] T1.14 add_zone() + get_zone() : accès par nom, KeyError si inconnu
-[ ] T1.15 add_connection() : rejette doublons a-b / b-a (ValueError)
-[ ] T1.16 get_neighbors() : liste les zones voisines d'une zone donnée
-[ ] T1.17 get_connection(z1, z2) : retrouve la connexion dans les 2 sens
-[ ] T1.18 validate() : lève erreur si start_hub ou end_hub manquant
-[ ] T1.19 `make lint` → 0 erreurs sur zone.py, connection.py,
+[x] T1.14 add_zone() + get_zone() : accès par nom, KeyError si inconnu
+[x] T1.15 add_connection() : rejette doublons a-b / b-a (ValueError)
+[x] T1.16 get_neighbors() : liste les zones voisines d'une zone donnée
+[x] T1.17 get_connection(z1, z2) : retrouve la connexion dans les 2 sens
+[x] T1.18 validate() : lève erreur si start_hub ou end_hub manquant
+[x] T1.19 `make lint` → 0 erreurs sur zone.py, connection.py,
           drone.py, graph.py
 
 --------------------------------------------------------------------------------
