@@ -11,8 +11,8 @@ class Connection:
     restricted zones) and enforces capacity limits.
 
     Args:
-        zone_a: Name of the first enpoint zone.
-        zone_b: Name of the second enpoint zone.
+        zone_a: Name of the first endpoint zone.
+        zone_b: Name of the second endpoint zone.
         max_link_capacity: Max drone simultaneously crossing.
     """
 
@@ -30,7 +30,7 @@ class Connection:
         self.drones_in_transit: set[int] = set()
 
     def connects(self, zone_name: str) -> bool:
-        """Check if this connection touches a given zone>
+        """Check if this connection touches a given zone.
 
         Args:
             zone_name: Name of the zone to test.
@@ -48,7 +48,7 @@ class Connection:
         Returns: Name of the other endpoint.
 
         Raises:
-            ValueError: If zone)name is not one of the endpoints
+            ValueError: If zone_name is not one of the endpoints
         """
 
         if zone_name == self.zone_a:
@@ -56,7 +56,7 @@ class Connection:
         if zone_name == self.zone_b:
             return self.zone_a
         raise ValueError(
-            f"Zone '{zone_name} is not part of the connection"
+            f"Zone '{zone_name}' is not part of the connection"
         )
 
     def has_capacity(self) -> bool:
@@ -77,6 +77,27 @@ class Connection:
                 f"Connection {self.zone_a}-{self.zone_b} is full"
             )
         self.drones_in_transit.add(drone_id)
+
+    def release(self, drone_id: int) -> None:
+        """Remove a drone from the in-transit set.
+
+        Called when a drone finishes traversing this connection
+        (e.g at the end of a multi-turn move into a restricted zone).
+
+        Args:
+            drone_id: Unique identifier of the drone leaving
+            the connection.
+
+        Raises:
+        KeyError: If the drone is not currently in transit
+            on this connection
+        """
+        if drone_id not in self.drones_in_transit:
+            raise KeyError(
+                f"Drone {drone_id} is not in transit on "
+                f"connection {self.zone_a}-{self.zone_b}"
+            )
+        self.drones_in_transit.remove(drone_id)
 
     def __eq__(self, other: object) -> bool:
         """Two connections are equal if endpoints match (any order)"""
