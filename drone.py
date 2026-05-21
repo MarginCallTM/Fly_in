@@ -74,3 +74,18 @@ class Drone:
             connection: The connection being entered.
         """
         self.status = DroneStatus.IN_TRANSIT
+        self.in_transit_connection = connection
+        # One tick on the link; tick_transit() drops it to 0
+        # at the next turn, signaling arrival.
+        self.turns_remaining_transit = 1
+
+    def tick_transit(self) -> bool:
+        """Advance the transit counter by one turn.
+
+        Returns: True if the transit just finished (drone is
+        ready to arrive at destination), False if still
+        ont the connection.
+        """
+        if self.turns_remaining_transit > 0:
+            self.turns_remaining_transit -= 1
+        return self.turns_remaining_transit == 0
