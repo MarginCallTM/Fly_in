@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from graph import Graph
+from zone import Zone, ZoneType
 
 
 class MapParseError(Exception):
@@ -45,7 +46,7 @@ class MapParser:
         Args:
             filepath: Path to the map file to read.
 
-        Retruns: A (graph, nb_drones) tuple. The graph is
+        Returns: A (graph, nb_drones) tuple. The graph is
         already validated (start/ end hubs present).
 
         Raises:
@@ -76,22 +77,22 @@ class MapParser:
             line_no: 1-based source line number for error reporting.
 
         Raises:
-            MapParseError: If then line does not start with any
-                know keyword
+            MapParseError: If the line does not start with any
+                known keyword.
         """
         prefix = line.split(":", 1)[0]
         match prefix:
             case "nb_drones":
                 self._parse_nb_drones(line, line_no)
             case "start_hub" | "end_hub" | "hub":
-                # Implemented in Session B
-                raise MapParseError(line_no, "zone parser not ready")
+                self._parse_zone(line, line_no, prefix)
             case "connection":
-                # Implemented in Session C
-                raise MapParseError(line_no, "connection parser not ready")
+                raise MapParseError(
+                    line_no, "connection parser not ready"
+                )
             case _:
                 raise MapParseError(
-                    line_no, f"unknow keyword '{prefix}'"
+                    line_no, f"unknown keyword '{prefix}'"
                 )
 
     def _parse_nb_drones(self, line: str, line_no: int) -> None:
@@ -117,7 +118,232 @@ class MapParser:
             )
         if n <= 0:
             raise MapParseError(
-                line_no, f"nb_drones must be ? 0 (got {n})"
+                line_no, f"nb_drones must be > 0 (got {n})"
             )
         self._nb_drones = n
         self._nb_drones_seen = True
+
+    def _parse_zone(
+            self, line: str, line_no: int, prefix: str
+    ) -> None:
+        """Parse a 'start_hub/end_hub/hub: ...' declaration.
+
+        Args:
+            line: The full source line.
+            line_no: 1-based source line number.
+            prefix: Which keyword matched ('start_hub',
+                'end_hub' or 'hub').
+
+        Raises:
+            MapParseError: If the body is malformed, the name
+                contains '-', or coordinates are not integers.
+        """
+        # Strip 'start_hub:' off the front, keep the rest.
+        _, _, rest = line.partition(":")
+        rest = rest.strip()
+        if not rest:
+            raise MapParseError(
+                line_no, f"empty body after '{prefix}'"
+            )
+        # Split 'name x y' from the optional '[meta]' block.
+        main_part, metadata = self._extract_metadata(
+            rest, line_no
+        )
+        tokens = main_part.split()
+        if len(tokens) != 3:
+            raise MapParseError(
+                line_no,
+                f"expected 'name x y', got '{main_part}'",
+            )
+        name, x_str, y_str = tokens
+        if "-" in name:
+            raise MapParseError(
+                line_no,
+                f"zone name '{name}' must not contain '-'",
+            )
+        try:
+            x = int(x_str)
+            y = int(y_str)
+        except ValueError:
+            raise MapParseError(
+                line_no,
+                f"coordinates must be integers "
+                f"(got '{x_str}', '{y_str}')"
+            )
+        zone = self._build_zone(
+            name, x, y, prefix, metadata, line_no
+        )
+        # Graph.add_zone enforces unique name + unique start/end
+        self._graph.add_zone(zone)
+
+    def _extract_metadata(
+            self, rest: str, line_no: int
+    ) -> tuple[str, dict[str, str]]:
+        """Split the body into 'main' part and metadata dict.
+
+        Args:
+            rest: Everything after the ":" of the line.
+            line_no: 1-based source line number.
+
+        Returns: Tuple (main_part, metadata). main_part is the
+        'name x y' text; metadata is empty if no brackets.
+
+        Raises:
+            MapParseError: If a '[' is opened but never closed
+            at the end of the line
+        """
+
+        if "[" not in rest:
+            return rest, {}
+        main, _, after = rest.partition("[")
+        if not after.endswith("]"):
+            raise MapParseError(
+                line_no, "metadata must end with ']'"
+            )
+        inner = after[:-1]  # drop the trailing ']'
+        return main.strip(), self._parse_metadata(
+            inner, line_no
+        )
+
+    def _parse_metadata(
+            self, meta_str: str, line_no: int
+    ) -> dict[str, str]:
+        """Parse 'key=val, key=val' into a dict.
+
+        Args:
+            meta_str: Content between '[' and ']'.
+            line_no: 1-based source line number.
+
+        Returns: A dict[str, str]. Empty if meta_str is blank.
+
+        Raises:
+            MapParseError: On missing '=', empty key/value,
+                or duplicate key inside the same bracket block.
+        """
+        result: dict[str, str] = {}
+        if not meta_str.strip():
+            return result
+        for chunk in meta_str.split(","):
+            chunk = chunk.strip()
+            if "=" not in chunk:
+                raise MapParseError(
+                    line_no,
+                    f"metadata entry '{chunk}' missing '='"
+                )
+            key, _, value = chunk.partition("=")
+            key = key.strip()
+            value = value.strip()
+            if not key or not value:
+                raise MapParseError(
+                    line_no,
+                    f"empty key or value in '{chunk}'"
+                )
+            if key in result:
+                raise MapParseError(
+                    line_no,
+                    f"duplicate metadata key '{key}'"
+                )
+            result[key] = value
+        return result
+
+    def _build_zone(
+            self,
+            name: str,
+            x: int,
+            y: int,
+            prefix: str,
+            metadata: dict[str, str],
+            line_no: int,
+    ) -> Zone:
+        """Construct a Zone from parsed fields and metadata.
+
+        Args:
+            name: Zone identifier (no dashes).
+            x, y: integer coordinates.
+            prefix: 'start_hub', 'end_hub' or 'hub'.
+            metadata: Dict from _parse_metadata.
+            line_no: 1-based source line number.
+
+        Returns: A fully initialized Zone object.
+
+        Raises:
+            MapParseError: If metadata contains unknown keys.
+        """
+        allowed = {"zone", "color", "max_drones"}
+        unknown = set(metadata) - allowed
+        if unknown:
+            raise MapParseError(
+                line_no,
+                f"unknown metadata key(s): {sorted(unknown)}",
+            )
+        zone_type = self._resolve_zone_type(
+            metadata.get("zone", "normal"), line_no
+        )
+        color = metadata.get("color")
+        max_drones = self._resolve_max_drones(
+            metadata.get("max_drones", "1"), line_no
+        )
+        return Zone(
+            name=name,
+            x=x,
+            y=y,
+            zone_type=zone_type,
+            color=color,
+            max_drones=max_drones,
+            is_start=(prefix == "start_hub"),
+            is_end=(prefix == "end_hub"),
+        )
+
+    def _resolve_zone_type(
+            self, value: str, line_no: int
+    ) -> ZoneType:
+        """Map a string ('normal', 'restricted'...) to ZoneType.
+
+        Args:
+            value: Raw string from metadata (e.g. 'priority').
+            line_no: 1-based source line number.
+
+        Returns: The matching ZoneType member.
+
+        Raises:
+            MapParseError: If the string is not a valid type.
+        """
+        try:
+            # ZoneType('normal') works because we set string
+            # values when declaring the enum in zone.py.
+            return ZoneType(value)
+        except ValueError:
+            valid = [t.value for t in ZoneType]
+            raise MapParseError(
+                line_no,
+                f"invalid zone type '{value}' "
+                f"(valid: {valid})"
+            )
+
+    def _resolve_max_drones(
+            self, value: str, line_no: int
+    ) -> int:
+        """Parse and validate the max_drones metadata value.
+
+        Args:
+            value: Raw string (e.g. '3').
+            line_no: 1-based source line number.
+
+        Returns: The integer value, guaranteed > 0.
+
+        Raises:
+            MapParseError: If not an integer or not strictly
+                positive.
+        """
+        try:
+            n = int(value)
+        except ValueError:
+            raise MapParseError(
+                line_no,
+                f"max_drones value '{value}' is not an integer"
+            )
+        if n <= 0:
+            raise MapParseError(
+                line_no, f"max_drones must be > 0 (got {n})"
+            )
+        return n

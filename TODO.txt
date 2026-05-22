@@ -117,16 +117,17 @@ PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
 PHASE 2 — PARSER (map_parser.py)
 --------------------------------------------------------------------------------
 
-[ ] 2.1  Classe MapParser avec méthode parse(filepath) -> Graph
+[~] 2.1  Classe MapParser avec méthode parse(filepath) -> Graph
+         (Sessions A et B faites : squelette + dispatcher + zones)
 
-[ ] 2.2  Lire le fichier avec `with open(...)` (context manager OBLIGATOIRE)
+[x] 2.2  Lire le fichier avec `with open(...)` (context manager OBLIGATOIRE)
 
-[ ] 2.3  Ignorer les commentaires (#) et les lignes vides
+[x] 2.3  Ignorer les commentaires (#) et les lignes vides
 
-[ ] 2.4  Parser `nb_drones: <int>` (première ligne non-commentée)
+[x] 2.4  Parser `nb_drones: <int>` (première ligne non-commentée)
          (!) Sujet VII.4 : doit être un entier positif
 
-[ ] 2.5  Parser les zones avec regex :
+[x] 2.5  Parser les zones (Session B — avec str.split, pas regex) :
          - start_hub: <name> <x> <y> [metadata]
          - end_hub:   <name> <x> <y> [metadata]
          - hub:       <name> <x> <y> [metadata]
