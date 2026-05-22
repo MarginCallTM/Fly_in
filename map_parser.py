@@ -228,7 +228,7 @@ class MapParser:
         result: dict[str, str] = {}
         if not meta_str.strip():
             return result
-        for chunk in meta_str.split(","):
+        for chunk in meta_str.replace(",", " ").split():
             chunk = chunk.strip()
             if "=" not in chunk:
                 raise MapParseError(
