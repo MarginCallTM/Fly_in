@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from graph import Graph
 from zone import Zone, ZoneType
+from connection import Connection
 
 
 class MapParseError(Exception):
@@ -66,7 +67,10 @@ class MapParser:
 
         if not self._nb_drones_seen:
             raise MapParseError(0, "missing 'nb_drones' declaration")
-        self._graph.validate()
+        try:
+            self._graph.validate()
+        except ValueError as err:
+            raise MapParseError(0, str(err))
         return self._graph, self._nb_drones
 
     def _route_line(self, line: str, line_no: int) -> None:
@@ -87,9 +91,7 @@ class MapParser:
             case "start_hub" | "end_hub" | "hub":
                 self._parse_zone(line, line_no, prefix)
             case "connection":
-                raise MapParseError(
-                    line_no, "connection parser not ready"
-                )
+                self._parse_connection(line, line_no)
             case _:
                 raise MapParseError(
                     line_no, f"unknown keyword '{prefix}'"
@@ -174,7 +176,10 @@ class MapParser:
             name, x, y, prefix, metadata, line_no
         )
         # Graph.add_zone enforces unique name + unique start/end
-        self._graph.add_zone(zone)
+        try:
+            self._graph.add_zone(zone)
+        except ValueError as err:
+            raise MapParseError(line_no, str(err))
 
     def _extract_metadata(
             self, rest: str, line_no: int
@@ -345,5 +350,121 @@ class MapParser:
         if n <= 0:
             raise MapParseError(
                 line_no, f"max_drones must be > 0 (got {n})"
+            )
+        return n
+
+    def _parse_connection(
+            self, line: str, line_no: int
+    ) -> None:
+        """Parse a 'connection: a-b [max_link_capacity]' line
+
+        Args:
+            line: The full source line.
+            line_no: 1-based source line number.
+
+        Raises:
+            MapParseError: If the body is empty, the 'a-b' format
+            is wrong, the metadata is malformed, or the capacity is
+            not a stricly possitive integer. Graph.add_connection
+            raises ValueError (caught upstream) if an endpoint zone
+            is unknown or the connection (a-b or b-a) is already declared.
+        """
+        _, _, rest = line.partition(":")
+        rest = rest.strip()
+        if not rest:
+            raise MapParseError(
+                line_no, "empty body after 'connection'"
+            )
+        main_part, metadata = self._extract_metadata(
+            rest, line_no
+        )
+        zone_a, zone_b = self._split_endpoints(
+            main_part, line_no
+        )
+        capacity = self._resolve_link_capacity(
+            metadata, line_no
+        )
+        conn = Connection(zone_a, zone_b, capacity)
+        # Graph rejects unknow zone + dupes (a-b / b-a)
+        try:
+            self._graph.add_connection(conn)
+        except ValueError as err:
+            raise MapParseError(line_no, str(err))
+
+    def _split_endpoints(
+            self, main_part: str, line_no: int
+    ) -> tuple[str, str]:
+        """Split 'a-b' into a clean (zone_a, zone_b) tuple.
+        Zone names cannot contain '-' (enforced by _parse_zone),
+        so exactly one dash is expected.
+
+        Args:
+            main_part: Text before the optional '[meta]' block.
+            line_no: 1-based source line number.
+
+        Returns: Tuple of two non-empty endpoint names.
+
+        Raises:
+            MapParseError: If the format is not 'a-b', if either
+            endpoint is empty, or if both endpoints are equal
+            (self-loop is rejected as degenerate).
+        """
+        parts = main_part.split("-")
+        if len(parts) != 2:
+            raise MapParseError(
+                line_no,
+                f"expected 'a-b' format, got '{main_part}'"
+            )
+        zone_a = parts[0].strip()
+        zone_b = parts[1].strip()
+        if not zone_a or not zone_b:
+            raise MapParseError(
+                line_no,
+                f"endpoint name is empty in '{main_part}'"
+            )
+        if zone_a == zone_b:
+            raise MapParseError(
+                line_no,
+                f"self-loop forbidden ('{zone_a}' to itself)"
+            )
+        return zone_a, zone_b
+
+    def _resolve_link_capacity(
+            self, metadata: dict[str, str], line_no: int
+    ) -> int:
+        """Validate metadata keys and return max_link_capacity.
+
+        Args:
+            metadata: Dict produced by _parse_metadata.
+            line_no: 1-based source line number.
+
+        Returns: The capacity as a strictly positive int
+            (defaults to 1 if absent).
+
+        Raises:
+            MapParseError: If a metadata key other than
+                'max_link_capacity' is present, or if the value
+                is not an integer > 0.
+        """
+        allowed = {"max_link_capacity"}
+        unknown = set(metadata) - allowed
+        if unknown:
+            raise MapParseError(
+                line_no,
+                f"unknown metadata key(s): {sorted(unknown)}"
+            )
+        value = metadata.get("max_link_capacity", "1")
+        try:
+            n = int(value)
+        except ValueError:
+            raise MapParseError(
+                line_no,
+                f"max_link_capacity '{value}' "
+                f"is not an integer"
+            )
+        if n <= 0:
+            raise MapParseError(
+                line_no,
+                f"max_link_capacity must be > 0 (got {n})"
             )
         return n

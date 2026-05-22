@@ -118,7 +118,7 @@ PHASE 2 — PARSER (map_parser.py)
 --------------------------------------------------------------------------------
 
 [~] 2.1  Classe MapParser avec méthode parse(filepath) -> Graph
-         (Sessions A et B faites : squelette + dispatcher + zones)
+         (Sessions A, B et C faites — reste 2.7 et 2.8)
 
 [x] 2.2  Lire le fichier avec `with open(...)` (context manager OBLIGATOIRE)
 
@@ -137,36 +137,43 @@ PHASE 2 — PARSER (map_parser.py)
          (!) Coordonnées : entiers
          (!) Types valides : normal, blocked, restricted, priority
 
-[ ] 2.6  Parser les connexions : `connection: <a>-<b> [max_link_capacity=N]`
+[x] 2.6  Parser les connexions : `connection: <a>-<b> [max_link_capacity=N]`
          (!) Les deux zones doivent déjà être déclarées
          (!) a-b et b-a sont des doublons à rejeter
 
-[ ] 2.7  Validation finale :
+[x] 2.7  Validation finale :
          - Exactement 1 start_hub et 1 end_hub
          - Noms de zones uniques
          - max_drones et max_link_capacity sont des entiers positifs
+         (déjà couverte : Graph.add_zone rejette les doublons,
+          Graph.validate() exige start/end, _resolve_*() valident
+          les entiers positifs)
 
-[ ] 2.8  Lever des exceptions claires avec n° de ligne et cause
+[x] 2.8  Lever des exceptions claires avec n° de ligne et cause
          (!) Sujet VII.4 : "stop the program and return a clear error message
              indicating the line and cause"
+         (try/except ValueError → MapParseError(line_no) dans
+          _parse_zone, _parse_connection et parse)
 
-[ ] 2.9  Tests unitaires dans test_.py (ou renommer test_parser.py) :
+[x] 2.9  Tests unitaires dans test_.py (ou renommer test_parser.py) :
          - Cartes valides minimales
          - Erreurs : double start, type invalide, connexion dupliquée,
            connexion vers zone inexistante, capacité négative, tiret dans nom
+         (test_session_b.py : 20 tests zones + nb_drones
+          test_session_c.py : 14 tests connexions = 34 tests OK)
 
   --- Tests de validation PHASE 2 ---
-[ ] T2.1  Parser une carte minimale : 1 start, 1 end, 1 connexion,
+[x] T2.1  Parser une carte minimale : 1 start, 1 end, 1 connexion,
           nb_drones correct → Graph valide retourné sans exception
-[ ] T2.2  Metadata optionnelle : zone=restricted, color=red,
+[x] T2.2  Metadata optionnelle : zone=restricted, color=red,
           max_drones=3 → attributs bien chargés sur la Zone
-[ ] T2.3  Commentaires (#) et lignes vides silencieusement ignorés
-[ ] T2.4  Erreur ligne+cause : double start_hub détecté
-[ ] T2.5  Erreur ligne+cause : type de zone invalide (ex: zone=flying)
-[ ] T2.6  Erreur ligne+cause : connexion dupliquée (a-b puis b-a)
-[ ] T2.7  Erreur ligne+cause : connexion vers zone inexistante
-[ ] T2.8  Erreur ligne+cause : capacité négative ou non-entière
-[ ] T2.9  Erreur ligne+cause : tiret dans le nom d'une zone
+[x] T2.3  Commentaires (#) et lignes vides silencieusement ignorés
+[x] T2.4  Erreur ligne+cause : double start_hub détecté
+[x] T2.5  Erreur ligne+cause : type de zone invalide (ex: zone=flying)
+[x] T2.6  Erreur ligne+cause : connexion dupliquée (a-b puis b-a)
+[x] T2.7  Erreur ligne+cause : connexion vers zone inexistante
+[x] T2.8  Erreur ligne+cause : capacité négative ou non-entière
+[x] T2.9  Erreur ligne+cause : tiret dans le nom d'une zone
 [ ] T2.10 `make lint` → 0 erreurs sur map_parser.py
 
 --------------------------------------------------------------------------------
