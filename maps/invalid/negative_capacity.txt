@@ -1,0 +1,5 @@
+# Negative max_link_capacity must be rejected (must be > 0)
+nb_drones: 2
+start_hub: A 0 0
+end_hub: B 10 10
+connection: A-B [max_link_capacity=-1]

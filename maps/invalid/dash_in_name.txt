@@ -1,0 +1,4 @@
+# Zone name 'my-start' contains a forbidden dash
+nb_drones: 2
+start_hub: my-start 0 0
+end_hub: B 10 10

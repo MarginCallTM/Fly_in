@@ -1,0 +1,6 @@
+# Same connection declared in both directions - rejected as duplicate
+nb_drones: 2
+start_hub: A 0 0
+end_hub: B 10 10
+connection: A-B
+connection: B-A

@@ -1,0 +1,5 @@
+# Two start_hub declarations: the second one must trigger the error
+nb_drones: 2
+start_hub: A 0 0
+start_hub: B 1 0
+end_hub: C 10 10

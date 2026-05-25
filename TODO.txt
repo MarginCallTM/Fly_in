@@ -117,8 +117,8 @@ PHASE 1 — MODÈLES DE DONNÉES (fichiers à la racine)
 PHASE 2 — PARSER (map_parser.py)
 --------------------------------------------------------------------------------
 
-[~] 2.1  Classe MapParser avec méthode parse(filepath) -> Graph
-         (Sessions A, B et C faites — reste 2.7 et 2.8)
+[x] 2.1  Classe MapParser avec méthode parse(filepath) -> Graph
+         (Sessions A, B et C faites — 2.7 et 2.8 terminés)
 
 [x] 2.2  Lire le fichier avec `with open(...)` (context manager OBLIGATOIRE)
 
@@ -174,13 +174,13 @@ PHASE 2 — PARSER (map_parser.py)
 [x] T2.7  Erreur ligne+cause : connexion vers zone inexistante
 [x] T2.8  Erreur ligne+cause : capacité négative ou non-entière
 [x] T2.9  Erreur ligne+cause : tiret dans le nom d'une zone
-[ ] T2.10 `make lint` → 0 erreurs sur map_parser.py
+[x] T2.10 `make lint` → 0 erreurs sur map_parser.py
 
 --------------------------------------------------------------------------------
 PHASE 3 — CARTES DE TEST (maps/)
 --------------------------------------------------------------------------------
 
-[ ] 3.1  Extraire maps.tar.gz dans maps/ :
+[x] 3.1  Extraire maps.tar.gz dans maps/ :
          tar -xzf maps.tar.gz
          Résultat attendu :
          maps/easy/01_linear_path.txt       (2 drones)
@@ -194,10 +194,10 @@ PHASE 3 — CARTES DE TEST (maps/)
          maps/hard/03_ultimate_challenge.txt (15 drones)
          maps/challenger/01_the_impossible_dream.txt (25 drones)
 
-[ ] 3.2  Lire et comprendre chaque carte officielle avant de coder
+[x] 3.2  Lire et comprendre chaque carte officielle avant de coder
          (valider manuellement que le format correspond bien au sujet)
 
-[ ] 3.3  Créer des cartes d'erreur pour tester le parser :
+[x] 3.3  Créer des cartes d'erreur pour tester le parser :
          maps/invalid/double_start.txt
          maps/invalid/bad_zone_type.txt
          maps/invalid/duplicate_connection.txt
@@ -205,19 +205,20 @@ PHASE 3 — CARTES DE TEST (maps/)
          maps/invalid/negative_capacity.txt
          maps/invalid/dash_in_name.txt
 
-[ ] 3.4  Créer des cartes edge case :
+[x] 3.4  Créer des cartes edge case :
          maps/edge/one_drone.txt      — 1 seul drone
          maps/edge/direct_path.txt    — start connecté directement à end
          maps/edge/blocked_only.txt   — seul chemin bloque (no solution)
 
   --- Tests de validation PHASE 3 ---
-[ ] T3.1  Charger les 10 cartes officielles sans exception
-[ ] T3.2  nb_drones correct pour chaque carte officielle
+[x] T3.1  Charger les 10 cartes officielles sans exception
+[x] T3.2  nb_drones correct pour chaque carte officielle
           (vérifier les valeurs attendues depuis le sujet)
-[ ] T3.3  Chaque carte de maps/invalid/ lève bien une exception
+[x] T3.3  Chaque carte de maps/invalid/ lève bien une exception
           avec numéro de ligne et description de la cause
-[ ] T3.4  Cartes edge case : 1 drone passe, chemin direct passe,
+[~] T3.4  Cartes edge case : 1 drone passe, chemin direct passe,
           blocked_only → comportement attendu défini et testé
+          (parsing OK ; no-solution behavior à tester en Phase 4)
 
 --------------------------------------------------------------------------------
 PHASE 4 — PATHFINDING (router.py)

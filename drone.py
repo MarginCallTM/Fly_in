@@ -13,7 +13,7 @@ class DroneStatus(Enum):
 
     AT_START = "at_start"  # Still on the start hub
     MOVING = "moving"  # In a zone, ready to move next turn
-    IN_TRANSIT = "in_transit"  # Reached the end hub
+    IN_TRANSIT = "in_transit"  # Crossing a connection (multi-turn move)
     ARRIVED = "arrived"     # Reached the end hub
 
 
@@ -64,7 +64,7 @@ class Drone:
         return self.status == DroneStatus.ARRIVED
 
     def start_transit(self, connection: Connection) -> None:
-        """"Begin a multi-turn move over a connection.
+        """Begin a multi-turn move over a connection.
 
         Called when a drone enters a connection leading to a
         restricted zone. The drone will spend one full turn on
