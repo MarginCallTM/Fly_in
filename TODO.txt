@@ -224,40 +224,47 @@ PHASE 3 — CARTES DE TEST (maps/)
 PHASE 4 — PATHFINDING (router.py)
 --------------------------------------------------------------------------------
 
-[ ] 4.1  Implémenter Dijkstra from scratch (avec heapq autorisé) :
+[x] 4.1  Implémenter Dijkstra from scratch (avec heapq autorisé) :
          - Coûts : normal=1, priority=1 (avec léger bonus si tie-breaker),
            restricted=2, blocked=inf
          - Retourne (cost, path) ou None si pas de chemin
+         (Dijkstra + tie-breaker PRIORITY via tuple (cost, penalty, name)
+          + paramètres blocked_zones/blocked_edges pour les chemins multiples)
 
-[ ] 4.2  Implémenter une recherche de chemins multiples disjoints :
-         - Option A : k-shortest paths (Yen's algorithm)
-         - Option B : edge-disjoint paths simplifié (Suurballe-like)
-         - Tenir compte des capacités zones et connexions
+[x] 4.2  Implémenter une recherche de chemins multiples disjoints :
+         - Greedy capacités résiduelles : Dijkstra répété en décrémentant
+           zone_load (max_drones) et edge_load (max_link_capacity)
+         - Router.find_disjoint_paths(max_paths) → list[Path]
+         - Chaque lane = 1 unité de flot (doublons = capacité parallèle)
          (!) Sujet VII.1 : "Distribution of drones across multiple paths"
 
-[ ] 4.3  Classe PathPlanner :
-         - find_all_useful_paths(graph) -> list[Path]
-         - assign_drones_to_paths(drones, paths, capacities) -> dict
-         - Stratégie : remplir d'abord les chemins courts dans la limite
-           de leur débit (capacité bottleneck)
+[x] 4.3  Classe PathPlanner :
+         - find_all_useful_paths(nb_drones) -> list[Path]
+         - assign_drones_to_paths(nb_drones, paths) -> list[Path]
+         - plan(nb_drones) -> list[Path]  ← point d'entrée Simulator
+         - Stratégie gloutonne lem-in : min(counts[i] + path.cost)
+         - NoSolutionError si aucune route disponible
 
-[ ] 4.4  Calculer le débit (throughput) d'un chemin = min des capacités
+[x] 4.4  Calculer le débit (throughput) d'un chemin = min des capacités
          des zones et connexions le long du chemin
+         (Router.path_throughput() — skips start/end, prend min global)
 
-[ ] 4.5  Optimisation : prioriser zones priority en cas d'égalité de coût
+[x] 4.5  Optimisation : prioriser zones priority en cas d'égalité de coût
+         (mécanisme penalty dans tuple heap : 0 si PRIORITY, +1 sinon)
 
-[ ] 4.6  Tests pathfinding : chemins triviaux, sans solution, multi-chemins,
-         priorité aux priority
+[x] 4.6  Tests pathfinding : chemins triviaux, sans solution, multi-chemins,
+         priorité aux priority, distribution PathPlanner
+         (9 tests dans test_router.py — tous verts)
 
   --- Tests de validation PHASE 4 ---
-[ ] T4.1  Dijkstra : chemin trivial start → end direct (1 connexion)
-[ ] T4.2  Dijkstra : retourne None si tous les chemins sont bloqués
-[ ] T4.3  Dijkstra : zone RESTRICTED comptée à 2 dans le coût total
-[ ] T4.4  Dijkstra : zone PRIORITY préférée en cas d'égalité de coût
-[ ] T4.5  Chemins multiples : ≥ 2 chemins disjoints trouvés sur une
-          carte avec fork (ex : easy/02_simple_fork.txt)
-[ ] T4.6  Débit d'un chemin = min(capacités zones + connexions du path)
-[ ] T4.7  `make lint` → 0 erreurs sur router.py
+[x] T4.1  Dijkstra : chemin trivial start → end direct (1 connexion)
+[x] T4.2  Dijkstra : retourne None si tous les chemins sont bloqués
+[x] T4.3  Dijkstra : zone RESTRICTED comptée à 2 dans le coût total
+[x] T4.4  Dijkstra : zone PRIORITY préférée en cas d'égalité de coût
+[x] T4.5  Chemins multiples : ≥ 2 chemins disjoints trouvés sur une
+          carte avec fork (easy/02_simple_fork.txt) — path_a ET path_b
+[x] T4.6  Débit d'un chemin = min(capacités zones + connexions du path)
+[x] T4.7  `make lint` → 0 erreurs sur router.py
 
 --------------------------------------------------------------------------------
 PHASE 5 — MOTEUR DE SIMULATION (simulator.py)

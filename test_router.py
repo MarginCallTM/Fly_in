@@ -10,10 +10,12 @@
 
 from __future__ import annotations
 
+import pytest
+
+from router import Router, PathPlanner, NoSolutionError
 from zone import Zone, ZoneType
 from connection import Connection
 from graph import Graph
-from router import Router
 
 
 def _build_graph(
@@ -119,3 +121,71 @@ def test_path_on_real_easy_map() -> None:
     assert path.zones[-1].name == "goal"
     # 4 zones, 3 hops through NORMAL zones -> cost 3
     assert path.cost == 3
+
+
+def test_disjoint_paths_on_fork() -> None:
+    """T4.5 - the fork map yields two distinct branch routes.
+
+    easy/02_simple_fork shares the junction (max_drones=2) and the
+    start-junction link (max_link_capacity=2) between two branches.
+    The greedy residual search must return >= 2 paths, one through
+    path_a and one through path_b.
+    """
+    from map_parser import MapParser
+    graph, _ = MapParser().parse("maps/easy/02_simple_fork.txt")
+    paths = Router(graph).find_disjoint_paths()
+    assert len(paths) >= 2
+    visited = {z.name for path in paths for z in path.zones}
+    assert "path_a" in visited
+    assert "path_b" in visited
+
+
+def test_plan_distributes_over_fork() -> None:
+    """Drones spread across both branches of the fork map.
+
+    With 4 drones and two equal-cost lanes (path_a, path_b), the
+    planner must use both, not pile everyone onto one.
+    """
+    from map_parser import MapParser
+    graph, nb_drones = MapParser().parse(
+        "maps/easy/02_simple_fork.txt"
+    )
+    assignment = PathPlanner(graph).plan(nb_drones)
+    assert len(assignment) == nb_drones
+    used = set()
+    for path in assignment:
+        for zone in path.zones:
+            if zone.name in ("path_a", "path_b"):
+                used.add(zone.name)
+    assert used == {"path_a", "path_b"}
+
+
+def test_plan_single_path_queues_all() -> None:
+    """On a linear map every drone shares the one lane.
+
+    easy/01_linear_path has a single route, so all drones get the
+    same lane assigned.
+    """
+    from map_parser import MapParser
+    graph, nb_drones = MapParser().parse(
+        "maps/easy/01_linear_path.txt"
+    )
+    assignment = PathPlanner(graph).plan(nb_drones)
+    assert len(assignment) == nb_drones
+    names = [z.name for z in assignment[0].zones]
+    for path in assignment:
+        assert [z.name for z in path.zones] == names
+
+
+def test_plan_no_solution_raises() -> None:
+    """A map whose only route is blocked raises NoSolutionError.
+
+    edge/blocked_only has its single route crossing a BLOCKED
+    zone, so planning must fail loudly, not silently.
+    """
+    from map_parser import MapParser
+    graph, nb_drones = MapParser().parse(
+        "maps/edge/blocked_only.txt"
+    )
+    with pytest.raises(NoSolutionError):
+        PathPlanner(graph).plan(nb_drones)
