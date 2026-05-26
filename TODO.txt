@@ -346,11 +346,18 @@ PHASE 6 — AFFICHAGE (renderer.py)
          - En-tête "Fly-in - N drones, T turns"
          (!) Sujet VII.1 : représentation visuelle OBLIGATOIRE
 
-[~] 6.3  Visualisation graphique matplotlib (graphical_renderer.py) :
+[x] 6.3  Visualisation graphique matplotlib (graphical_renderer.py) :
          - GraphicalRenderer(Renderer) avec FuncAnimation
-         - Graphe animé : nœuds coords x,y, drones frame par frame
-         - Snapshots (Simulator.snapshots) comme source de données
-         [EN COURS — à implémenter]
+         - Graphe statique : zones colorées par type (NORMAL=gris,
+           PRIORITY=vert, RESTRICTED=orange, BLOCKED=rouge), start=carré,
+           end=étoile, labels offset 12pt au-dessus, connexions en lignes
+         - Drones animés : 1 point coloré/drone, transit=mi-segment,
+           couleur stable par id (cycle DRONE_COLORS)
+         - _update retourne list[Artist] (exigé mypy, matplotlib py.typed)
+         - interval=1200ms, repeat=True, repeat_delay=1500ms
+         - Branchée via flag --graph dans main.py (import matplotlib lazy)
+         - Confirmé visuellement sur medium/02 : transit restricted
+           affiché correctement (drone à mi-segment pendant 1 tour) ✓
 
 [ ] 6.4  Mode summary final : nombre de tours, drones livrés par tour,
          coût total

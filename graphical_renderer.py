@@ -63,7 +63,7 @@ class GraphicalRenderer(Renderer):
         self.anim = FuncAnimation(
             self.fig, self._update,
             frames=len(self.simulator.snapshots),
-            interval=700, repeat=False,
+            interval=1200, repeat=True,
         )
         plt.tight_layout()
         plt.show()
