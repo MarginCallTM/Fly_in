@@ -270,15 +270,17 @@ PHASE 4 — PATHFINDING (router.py)
 PHASE 5 — MOTEUR DE SIMULATION (simulator.py)
 --------------------------------------------------------------------------------
 
-[ ] 5.1  Classe Simulator :
-         - __init__(graph, drones, planner)
+[x] 5.1  Classe Simulator :
+         - __init__(graph, nb_drones)  [planner/drones/history construits ici]
          - run() -> int (nombre de tours)
          - history: list[list[Movement]]
+         + dataclass Movement(drone_id, destination, is_transit) + __str__
+         + snapshots: list[dict[int, str]] (frames pour Phase 6 graphique)
 
-[ ] 5.2  Initialisation : tous les drones placés au start_hub
+[x] 5.2  Initialisation : tous les drones placés au start_hub
          (!) start a capacité illimitée — pas de vérification de max_drones
 
-[ ] 5.3  Boucle principale (while not tous_arrivés) :
+[x] 5.3  Boucle principale (while not tous_arrivés) :
          a) Calculer les intentions de mouvement pour chaque drone
          b) Résoudre les conflits (capacités zones + connexions)
          c) Appliquer les mouvements valides en SIMULTANÉ
@@ -286,68 +288,83 @@ PHASE 5 — MOTEUR DE SIMULATION (simulator.py)
          e) Logger les mouvements du tour
          f) Incrémenter turn_count
 
-[ ] 5.4  Résolution des mouvements simultanés :
+[x] 5.4  Résolution des mouvements simultanés :
          - Algorithme : un drone sortant libère sa place AVANT que d'autres
            tentent d'y rentrer dans le même tour
+         - Implé : tri des drones par path_index décroissant + application
+           immédiate sur les modèles (la place libérée est vue par can_accept)
          (!) Sujet VII.3 : "Drones moving out of a zone free up capacity
              for that same turn"
 
-[ ] 5.5  Gérer le transit vers restricted (2 tours) :
+[x] 5.5  Gérer le transit vers restricted (2 tours) :
          - Tour T : drone entre dans la connexion (output: D1-<connection>)
          - Tour T+1 : drone arrive dans la zone (output: D1-<zone>)
+         - Implé : compteur incoming[zone] pour réserver la place à T+1
          (!) Sujet VII.3 : "It can't wait extra turns on the connection"
          (!) Doit donc vérifier à l'avance que la zone destination aura
              de la place au tour T+1 avant de s'engager
 
-[ ] 5.6  Stratégie d'attente : un drone bloqué reste sur place (omis du log)
+[x] 5.6  Stratégie d'attente : un drone bloqué reste sur place (omis du log)
 
-[ ] 5.7  Détection de boucle infinie (limite max_turns, ex: 1000)
+[x] 5.7  Détection de boucle infinie (limite max_turns=1000 -> RuntimeError)
 
-[ ] 5.8  Tests simulation :
+[~] 5.8  Tests simulation :  (validé MANUELLEMENT le 2026-05-26 via scripts,
+         test_simulator.py pytest formel RESTE À ÉCRIRE)
          - Tous arrivent
          - Respect capacités
          - Restricted prend bien 2 tours
          - Pas de collision
 
   --- Tests de validation PHASE 5 ---
-[ ] T5.1  1 drone, chemin direct : arrive en 1 tour, status ARRIVED
-[ ] T5.2  Capacités respectées : 2 drones jamais dans la même zone
-          (max_drones=1) au même tour
-[ ] T5.3  Transit restricted : log sur connexion au tour T,
+  (NB : validés manuellement sur easy/* + medium/* ; à formaliser en pytest)
+[x] T5.1  1 drone, chemin direct : arrive en 1 tour, status ARRIVED
+          -> edge/one_drone : 1 tour OK
+[~] T5.2  Capacités respectées : 2 drones jamais dans la même zone
+          (max_drones=1) au même tour  [observé OK, pas de test pytest dédié]
+[x] T5.3  Transit restricted : log sur connexion au tour T,
           log dans la zone au tour T+1 — exactement 2 tours
-[ ] T5.4  Libération simultanée : drone sortant libère sa place pour
-          un entrant dans le même tour (règle VII.3)
-[ ] T5.5  Simulation complète : tous les drones finissent ARRIVED
+          -> medium/02 (exit_point) et medium/03 (slow_path1) OK
+[x] T5.4  Libération simultanée : drone sortant libère sa place pour
+          un entrant dans le même tour (règle VII.3)  -> easy/linear OK
+[x] T5.5  Simulation complète : tous les drones finissent ARRIVED
+          -> easy/* (4t) + medium/* (8/15/7t) sous les benchmarks
 [ ] T5.6  Détection boucle : lève une erreur si max_turns dépassé
-[ ] T5.7  `make lint` → 0 erreurs sur simulator.py
+          [implémenté mais PAS encore testé]
+[x] T5.7  `make lint` → 0 erreurs sur simulator.py
 
 --------------------------------------------------------------------------------
 PHASE 6 — AFFICHAGE (renderer.py)
 --------------------------------------------------------------------------------
 
-[ ] 6.1  Classe Renderer :
-         - render_turn(movements) -> str (format `D<ID>-<zone>` joints par
-           espace)
+[x] 6.1  Classe Renderer (ABC) + TerminalRenderer :
+         - Renderer(ABC) : interface commune, méthode abstraite render()
+         - TerminalRenderer(Renderer) : render() → format sujet VII.5
          (!) Sujet VII.5 : drones immobiles omis, drones arrivés disparaissent
 
-[ ] 6.2  Output coloré terminal (ANSI escapes ou librairie `colorama` /
-         `rich`) en utilisant le champ color des zones
+[x] 6.2  Output coloré terminal (colorama) :
+         - Couleur stable par drone (cycle Fore.GREEN/CYAN/YELLOW/...)
+         - En-tête "Fly-in - N drones, T turns"
          (!) Sujet VII.1 : représentation visuelle OBLIGATOIRE
 
-[ ] 6.3  (Option) Visualisation graphique avec matplotlib ou pygame :
-         - Affiche le graphe (nœuds aux coordonnées x,y)
-         - Position des drones tour par tour
-         - Animation ou step-by-step
+[~] 6.3  Visualisation graphique matplotlib (graphical_renderer.py) :
+         - GraphicalRenderer(Renderer) avec FuncAnimation
+         - Graphe animé : nœuds coords x,y, drones frame par frame
+         - Snapshots (Simulator.snapshots) comme source de données
+         [EN COURS — à implémenter]
 
 [ ] 6.4  Mode summary final : nombre de tours, drones livrés par tour,
          coût total
 
   --- Tests de validation PHASE 6 ---
-[ ] T6.1  render_turn() : format `D<ID>-<zone>` séparés par des espaces
-[ ] T6.2  Drone immobile : absent de la ligne du tour (omis du log)
-[ ] T6.3  Drone en transit : logge le nom de la connexion, pas la zone
-[ ] T6.4  Drone arrivé : absent de tous les tours suivants
-[ ] T6.5  `make lint` → 0 erreurs sur renderer.py
+[x] T6.1  Format `D<ID>-<zone>` séparés par des espaces — confirmé
+          (ex : "D1-waypoint1", "D1-waypoint2 D2-waypoint1")
+[x] T6.2  Drone immobile : absent de la ligne du tour (omis du log)
+          (garanti par Simulator._step qui ne log que les Movement produits)
+[x] T6.3  Drone en transit : logge le nom de la connexion, pas la zone
+          (Movement.is_transit + label "zone_a-zone_b" dans _try_enter_restricted)
+[x] T6.4  Drone arrivé : absent de tous les tours suivants
+          (DroneStatus.ARRIVED → exclu par _active_drones_ordered)
+[x] T6.5  `make lint` → 0 erreurs sur renderer.py
 
 ================================================================================
   >>> MEMO PERSONNEL — QUÊTE SECONDAIRE : VISUALISATION 3D <<<
@@ -384,22 +401,24 @@ PHASE 6 — AFFICHAGE (renderer.py)
 PHASE 7 — POINT D'ENTRÉE (main.py)
 --------------------------------------------------------------------------------
 
-[ ] 7.1  Parse arguments CLI (sys.argv) : fichier carte, options affichage
+[x] 7.1  Parse arguments CLI (sys.argv) : fichier carte (sys.argv[1])
 
-[ ] 7.2  Try/except global pour les erreurs parser
+[x] 7.2  Try/except global : FileNotFoundError, MapParseError,
+         NoSolutionError, RuntimeError → message propre + exit code 1
          (!) Sujet III.1 : crash = projet non-fonctionnel
 
-[ ] 7.3  Orchestration : parser -> planner -> simulator -> renderer
+[x] 7.3  Orchestration : MapParser → Simulator.run() → TerminalRenderer
+         (classe Application + fonction main() → séparation OO / argv)
 
-[ ] 7.4  Code de sortie : 0 si succès, 1 si erreur
+[x] 7.4  Code de sortie : 0 si succès, 1 si erreur, 2 si mauvais usage
 
   --- Tests de validation PHASE 7 ---
-[ ] T7.1  main.py : exit code 0 sur une carte valide
-[ ] T7.2  main.py : exit code 1 + message clair sur carte invalide
-[ ] T7.3  main.py : message d'usage si aucun argument passé
-[ ] T7.4  Orchestration complète : parser → planner → simulator →
-          renderer sans erreur sur easy/01_linear_path.txt
-[ ] T7.5  `make lint` → 0 erreurs sur main.py
+[x] T7.1  exit code 0 sur carte valide — confirmé (easy/01, code 0)
+[x] T7.2  exit code 1 + message sur carte invalide — implémenté (_fail)
+[x] T7.3  message d'usage si aucun argument — implémenté (len(argv) != 2)
+[x] T7.4  Orchestration complète sur easy/01 : "Fly-in - 2 drones, 4 turns"
+          + 4 lignes D<ID>-<zone> — confirmé visuellement
+[x] T7.5  `make lint` → 0 erreurs sur main.py
 
 --------------------------------------------------------------------------------
 PHASE 8 — TESTS & VALIDATION
