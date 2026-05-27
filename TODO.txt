@@ -492,3 +492,6 @@ CHECKLIST FINALE AVANT SOUMISSION
 ================================================================================
                             FIN DU TODO — Good luck!
 ================================================================================
+
+- Check l affichage graphique de plusieurs drone sur un meme points
+- Parsing mauvais doit return error quand nb drone n est pas en 1er ligne
