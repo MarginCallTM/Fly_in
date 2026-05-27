@@ -7,7 +7,9 @@
   """
 
 from __future__ import annotations
+import math
 from typing import Any
+
 
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -37,6 +39,7 @@ class GraphicalRenderer(Renderer):
     }
 
     # Cycled through by drone id (same idea as TerminalRenderer)
+    DRONE_SPREAD: float = 0.18
     DRONE_COLORS: list[str] = [
         "#1e88e5", "#d81b60", "#8e24aa",
         "#00897b", "#f4511e", "#3949ab",
@@ -123,9 +126,48 @@ class GraphicalRenderer(Renderer):
         return [self.dots]
 
     def _positions_at(self, frame: int) -> list[tuple[float, float]]:
-        """Return every drone's (x, y) at a frame, sorted by id."""
+        """Return every drone's (x, y) at a frame, sorted by id.
+
+          Drones sharing the same zone (or connection midpoint) are
+          fanned out around it, so overlapping drones never collapse
+          into a single dot.
+          """
         state = self.simulator.snapshots[frame]
-        return [self._drone_xy(state[d]) for d in sorted(state)]
+        bases = [self._drone_xy(state[d]) for d in sorted(state)]
+        return self._spread_overlaps(bases)
+
+    def _spread_overlaps(
+            self, bases: list[tuple[float, float]]
+    ) -> list[tuple[float, float]]:
+        """Fan out drones that share an identical base position
+
+        Groups positions by exact (x, y); any group of 2+
+        is spread on a small circle. Order is preserved so
+        each drone keeps its colour slot.
+        """
+        groups: dict[tuple[float, float], list[int]] = {}
+        for index, xy in enumerate(bases):
+            groups.setdefault(xy, []).append(index)
+        result = list(bases)
+        for members in groups.values():
+            if len(members) > 1:
+                self._fan_out(result, members)
+        return result
+
+    def _fan_out(
+            self,
+            positions: list[tuple[float, float]],
+            members: list[int],
+    ) -> None:
+        """Spread members evenly on a small circle around center"""
+        count = len(members)
+        center_x, center_y = positions[members[0]]
+        for rank, index in enumerate(members):
+            angle = 2.0 * math.pi * rank / count
+            positions[index] = (
+                center_x + self.DRONE_SPREAD * math.cos(angle),
+                center_y + self.DRONE_SPREAD * math.sin(angle),
+            )
 
     def _drone_xy(self, token: str) -> tuple[float, float]:
         """Locate a drone from its snapshot token

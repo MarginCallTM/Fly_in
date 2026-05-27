@@ -1,0 +1,7 @@
+# 'nb_drones' must be the FIRST declaration (subject VII.4)
+start_hub: start 0 0
+hub: middle 1 0
+end_hub: goal 2 0
+nb_drones: 3
+connection: start-middle
+connection: middle-goal

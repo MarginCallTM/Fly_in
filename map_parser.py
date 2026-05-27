@@ -85,6 +85,11 @@ class MapParser:
                 known keyword.
         """
         prefix = line.split(":", 1)[0]
+        if not self._nb_drones_seen and prefix != "nb_drones":
+            raise MapParseError(
+                line_no,
+                "'nb_drones' must be the first declaration"
+            )
         match prefix:
             case "nb_drones":
                 self._parse_nb_drones(line, line_no)

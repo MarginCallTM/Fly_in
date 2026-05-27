@@ -494,4 +494,4 @@ CHECKLIST FINALE AVANT SOUMISSION
 ================================================================================
 
 - Check l affichage graphique de plusieurs drone sur un meme points
-- Parsing mauvais doit return error quand nb drone n est pas en 1er ligne
+- Opti le render visuel pour voir les drones avancer par pair
