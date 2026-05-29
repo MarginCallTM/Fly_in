@@ -1,5 +1,0 @@
-# Connection references zone 'Z' that was never declared
-nb_drones: 2
-start_hub: A 0 0
-end_hub: B 10 10
-connection: A-Z

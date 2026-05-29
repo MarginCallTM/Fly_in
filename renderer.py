@@ -9,8 +9,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
-from colorama import Fore, Style, init as colorama_init
+from colorama import Style, init as colorama_init
 
+from color_palette import ColorPalette
 from simulator import Simulator, Movement
 
 
@@ -46,20 +47,16 @@ class TerminalRenderer(Renderer):
                 simulator: A Simulator on which run() has been called
     """
 
-    # Cycled through ny drone id so each drone keeps one colour.
-    COLORS: list[str] = [
-        Fore.GREEN, Fore.CYAN, Fore.YELLOW,
-        Fore.MAGENTA, Fore.BLUE, Fore.RED,
-    ]
-
     def __init__(self, simulator: Simulator) -> None:
         """Enable colorama, then store the simulation. """
         super().__init__(simulator)
         colorama_init(autoreset=True)
+        self.palette = ColorPalette()
 
     def render(self) -> None:
         """Print a header, then one line per played turn"""
         self._print_header()
+        self._print_legend()
         for moves in self.simulator.history:
             line = " ".join(self._format_move(m) for m in moves)
             print(line)
@@ -72,11 +69,54 @@ class TerminalRenderer(Renderer):
             f"{self.simulator.nb_drones} drones, {turns} turns"
         )
 
-    def _color_for(self, drone_id: int) -> str:
-        """Return the stable colour assigned to a drone id."""
-        return self.COLORS[(drone_id - 1) % len(self.COLORS)]
+    def _print_legend(self) -> None:
+        """Print each colored zone once as a visual key.
+
+        Proves the map colors are honored, even for a zone a
+        drone only crosses for a single turn. Zones with no
+        color are skipped to keep the legend short.
+        """
+        colored = [
+            zone for zone in self.simulator.graph.zones.values()
+            if zone.color is not None
+        ]
+        if not colored:
+            return
+        tokens = [self._color_zone(zone.name) for zone in colored]
+        print("Zones: " + " ".join(tokens))
+
+    def _color_zone(self, destination: str) -> str:
+        """Wrap a destination token in its zone's declared color
+
+        The token is a zone name, or an 'a-b' connection label
+        while in transit; the arrival zone (after the dash) drves
+        the color. An unknow/absent color leave the token plain
+
+        Args:
+            destination: Zone name or connection label.
+
+        Returns: The token, ANSI-colored when the zone has a known
+            color, otherzise unchanged
+        """
+        zone_name = destination.split("-")[-1]
+        zone = self.simulator.graph.zones.get(zone_name)
+        color = zone.color if zone is not None else None
+        code = self.palette.terminal_code(color)
+        if not code:
+            return destination
+        return f"{code}{destination}{self.palette.reset()}"
 
     def _format_move(self, move: Movement) -> str:
-        """Colour one move token, e.g. a green 'D1-roof1'"""
-        color = self._color_for(move.drone_id)
-        return f"{color}{move}{Style.RESET_ALL}"
+        """Color the whole token in its destination zone's color.
+
+          The 'D<id>-' prefix and the zone name now share a single
+          color: the one declared for the arrival zone in the map.
+          A zone with no/unknown color leaves the token unstyled.
+
+          Args:
+              move: The move to render as 'D<id>-<zone>'.
+
+          Returns: The styled token string.
+        """
+        token = f"D{move.drone_id}-{move.destination}"
+        return self._color_zone(token)

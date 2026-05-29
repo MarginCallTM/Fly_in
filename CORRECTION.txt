@@ -1,0 +1,237 @@
+================================================================================
+ FLY-IN — CHECKLIST DE PREPARATION A LA CORRECTION 42
+================================================================================
+Genere a partir du bareme officiel (correction/correction1..7.png).
+Objectif : valider chaque exigence AVANT la soutenance.
+Convention : [ ] a faire   [x] valide   [~] partiel / a verifier
+
+Rappel important du bareme :
+- La review se fait EN PRESENCE du learner ; tu dois pouvoir EXPLIQUER ton code.
+- Si le programme n'est pas fonctionnel, la review s'arrete (mais le code des
+  sections suivantes peut quand meme etre lu).
+- Le code review NE DOIT PAS crasher : "Crash", "Leaks", "Forbidden function"
+  et "Can't support / explain code" sont des sanctions directes.
+
+
+================================================================================
+ 1. README.md (correction1)
+================================================================================
+Le README a la racine doit contenir TOUT ce qui suit :
+[ ] Section "Description" : but du projet + bref apercu.
+[ ] Section "Instructions" : comment lancer (make run MAP=..., dependances).
+[ ] Section "Algorithm explanation" : approche pathfinding + choix de design.
+[ ] Documentation des features de representation visuelle + UX.
+[ ] Exemple d'input + output attendu qui demontre le fonctionnement.
+ACTION : relire README.md et cocher chaque sous-point un par un.
+
+
+================================================================================
+ 2. STRUCTURE & QUALITE DU CODE (correction1 + correction6)
+================================================================================
+[ ] Projet 100% oriente objet (toute la logique dans des classes).
+[ ] Bonne separation des responsabilites (parser / models / pathfinding /
+    simulation / display), encapsulation, heritage la ou pertinent.
+[ ] Code lisible, style coherent, commentaires + docstrings appropries.
+[ ] Le code de representation visuelle est bien integre (pas un hack a part).
+
+TYPE SAFETY :
+[ ] `mypy .` (avec les flags du Makefile) ne renvoie AUCUNE erreur.
+[ ] Type hints presents partout (params + retours).
+    COMMANDE : make lint
+
+NORME / FLAKE8 :
+[ ] `flake8 .` propre (lignes <= 79, pas d'import inutilise, espacement).
+    COMMANDE : make lint
+
+
+================================================================================
+ 3. IMPLEMENTATION DU GRAPHE (correction2)
+================================================================================
+[ ] Graphe maison : AUCUNE librairie de graphes (networkx, graphlib, etc.).
+    COMMANDE : grep -rn "import networkx\|import graphlib\|from networkx" *.py
+[ ] Tu sais expliquer comment ta classe Graph fonctionne (noeuds, aretes,
+    parcours) sans librairie.
+
+
+================================================================================
+ 4. PARSER — FICHIERS D'ENTREE (correction2)
+================================================================================
+Le parser doit gerer le nouveau format. Au moins 4/5 doivent marcher :
+[ ] "nb_drones: <number>".
+[ ] Zones avec prefixe de type : start_hub / end_hub / hub.
+[ ] Connexions : "connection: a-b" (format zone1-zone2).
+[ ] Metadata optionnelle : [color=... max_drones=X], zone=normal par defaut.
+[ ] Metadata de connexion : max_link_capacity=1 par defaut.
+[ ] Commentaires commencant par # ignores.
+ACTION : tester un parse de chaque map de maps/ et confirmer 0 erreur.
+
+
+================================================================================
+ 5. PARSER — GESTION DES ERREURS (correction2 + correction6)
+================================================================================
+Au moins 4/5 cas doivent renvoyer un message CLAIR (et ne pas crasher) :
+[ ] Fichier manquant / introuvable.
+[ ] nb_drones manquant ou invalide.
+[ ] Type de zone invalide / inconnu.
+[ ] start_hub ou end_hub manquant.
+[ ] Capacite invalide (entier non strictement positif).
+[ ] Noms de zones ou connexions en double.
+[ ] Graphe deconnecte (gere proprement, message informatif).
+[ ] Connexions invalides (zone inconnue dans une connexion).
+ACTION : preparer un dossier de maps invalides pour la demo (1 par cas).
+ACTION : verifier que CHAQUE erreur sort un message lisible, pas une traceback.
+
+
+================================================================================
+ 6. MECANIQUE DES ZONES — OCCUPATION (correction2)
+================================================================================
+[ ] Respect de max_drones (defaut 1).
+[ ] Un drone ne peut PAS entrer dans une zone qui depasserait sa capacite.
+[ ] Plusieurs drones peuvent partager start ET end (capacite illimitee).
+[ ] Contraintes de capacite appliquees pendant TOUTE la simulation.
+ACTION : creer des cas de test qui prouvent ces 4 regles.
+
+
+================================================================================
+ 7. COUTS DE DEPLACEMENT PAR TYPE (correction3)
+================================================================================
+Verifier dans la sortie que la simulation respecte :
+[ ] normal    -> 1 tour.
+[ ] restricted-> 2 tours.
+[ ] priority  -> 1 tour (mais PREFERE par le pathfinding).
+[ ] blocked   -> inaccessible (jamais traverse).
+ACTION : map de test avec une zone de chaque type + lire la sortie tour par tour.
+
+
+================================================================================
+ 8. CAPACITE DES CONNEXIONS (correction3)  *** BUG RECEMMENT CORRIGE ***
+================================================================================
+[ ] Respect de max_link_capacity (defaut 1).
+[ ] Plusieurs drones traversent une connexion a forte capacite SIMULTANEMENT.
+[ ] La limite de connexion est appliquee pendant la simulation (mvt normal ET
+    transit vers restricted partagent le meme budget par tour).
+ACTION (regression) : map avec lien max_link_capacity=2 + beaucoup de drones ;
+    verifier qu'on ne voit JAMAIS > 2 tokens sur ce lien dans un meme tour.
+    (Fix applique dans simulator.py : _try_normal_move + _try_enter_restricted
+     + _link_loads_at_start.)
+
+
+================================================================================
+ 9. REPRESENTATION VISUELLE (correction3)
+================================================================================
+[ ] Feedback visuel clair (terminal colore ET/OU rendu graphique).
+[ ] Les couleurs proviennent bien de la metadata des zones (map).
+[ ] La visu aide reellement a comprendre la simulation.
+[ ] Positions et mouvements des drones clairement visibles.
+ACTION : lancer le rendu terminal + le rendu matplotlib sur une map coloree.
+
+
+================================================================================
+ 10. FONCTIONNALITE DE BASE (correction3 + correction4)
+================================================================================
+Au moins 4/5 scenarios simples passent :
+[ ] Drone unique sur chemin lineaire.
+[ ] Plusieurs drones sur des chemins differents.
+[ ] L'exemple fourni (avec attachments) fonctionne.
+[ ] Format de sortie : "D<ID>-<zone>" ou "D<ID>-<connection>".
+[ ] Les drones immobiles sont OMIS de la ligne.
+[ ] La simulation s'ARRETE des que tous les drones sont arrives (plus de sortie).
+ACTION : make run sur easy/01, easy/02 et verifier le format exact.
+
+
+================================================================================
+ 11. PATHFINDING — CHEMINS VALIDES (correction4)
+================================================================================
+Trouve des chemins valides start->end pour :
+[ ] Maps lineaires simples.
+[ ] Maps avec plusieurs chemins possibles.
+[ ] Maps avec goulots + contraintes de capacite.
+[ ] Maps utilisant differents types de zones.
+[ ] Tu sais expliquer l'algo (Dijkstra/A*/flow), sa complexite et ses trade-offs.
+ACTION : passer toutes les maps de maps/ sans NoSolution injustifie.
+
+
+================================================================================
+ 12. RESOLUTION DE CONFLITS (correction4)
+================================================================================
+[ ] Drones en concurrence pour une capacite limitee : geres correctement.
+[ ] Plusieurs drones simultanes geres.
+[ ] Les contraintes de capacite empechent les conflits.
+[ ] Mouvement tour-par-tour avec zones multi-tours (restricted) correct.
+ACTION : map "capacity_hell" pour stresser la resolution de conflits.
+
+
+================================================================================
+ 13. PERFORMANCE & BENCHMARKS (correction4 + correction5)
+================================================================================
+Non bloquant pour passer, mais vise les cibles (lire le nb de tours en sortie).
+
+EASY (< 10 tours en moyenne) :
+[ ] easy/01_linear_path     (2 drones)  cible <= 6 tours.
+[ ] easy/02_simple_fork     (4 drones)  cible <= 8 tours.
+[ ] easy/03_basic_capacity  (4 drones)  cible <= 6 tours.
+
+MEDIUM (10-30 tours) :
+[ ] medium/01_dead_end_trap (5 drones)  cible <= 12 tours.
+[ ] medium/02_circular_loop (6 drones)  cible <= 15 tours.
+[ ] medium/03_priority_puzzle(5 drones) cible <= 12 tours.
+
+HARD (< 60 tours) :
+[ ] hard/01_maze_nightmare  (8 drones)  cible <= 30 tours.
+[ ] hard/02_capacity_hell   (12 drones) cible <= 33 tours.
+[ ] hard/03_ultimate_challenge(15 drones) cible <= 45 tours.
+
+[ ] Tester aussi 10+ drones / grandes topologies : perf raisonnable, pas de
+    blow-up.
+ACTION : noter le nombre de tours obtenu pour chaque map et comparer aux cibles.
+
+
+================================================================================
+ 14. EDGE CASES (correction5)
+================================================================================
+Au moins 4/5 geres correctement :
+[ ] Scenario drone unique.
+[ ] Maps avec goulots / capacite limitee.
+[ ] Graphes deconnectes (echec gracieux, pas de crash).
+[ ] Connexions invalides entre zones.
+[ ] Valeurs de capacite a zero ou tres elevees.
+ACTION : preparer une mini-map par cas pour la demo.
+
+
+================================================================================
+ 15. LIVE CODING (correction6)  *** A PREPARER ABSOLUMENT ***
+================================================================================
+Pendant la review, on te demandera une modif simple a faire en < 10 min :
+
+  Ajouter un flag "--capacity-info" qui AFFICHE l'info de capacite pendant la
+  simulation, du type :
+     "Zone X: Y/Z drones, Connection A-B: Y/Z capacity used"
+  pour CHAQUE tour.
+
+[ ] Savoir OU se trouve le parsing des arguments (main.py).
+[ ] Savoir OU se trouve le code de sortie/affichage (renderer.py / simulator.py).
+[ ] S'entrainer a ajouter ce flag et a brancher l'affichage tour par tour.
+[ ] Verifier que ca marche sur une map de test, sans casser le reste.
+ACTION : faire un essai chronometre AVANT la soutenance.
+
+
+================================================================================
+ 16. BONUS — PERFORMANCE EXCEPTIONNELLE (correction7)
+================================================================================
+[ ] "Perfectly" : atteindre OU battre toutes les cibles ci-dessus (section 13).
+[ ] CHALLENGER : challenger/01_the_impossible_dream resolu ET bat le record
+    de reference de 45 tours.
+ACTION : mesurer le nb de tours sur la challenger et viser < 45.
+
+
+================================================================================
+ 17. PASSE FINALE AVANT SOUTENANCE
+================================================================================
+[ ] make lint  -> 0 erreur flake8, 0 erreur mypy.
+[ ] make run sur les 10 maps -> aucune crash, sortie coherente.
+[ ] make clean -> supprime caches.
+[ ] Relire le README une derniere fois (toutes les sections presentes).
+[ ] Repeter l'explication orale : graphe maison, pathfinding, gestion capacite,
+    optimisation, choix de design (eviter "Can't support / explain code").
+[ ] Verifier l'absence de fonction interdite et de librairie de graphe.
+================================================================================

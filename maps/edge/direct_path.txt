@@ -1,5 +1,0 @@
-# Edge case: start_hub is directly connected to end_hub (no hop)
-nb_drones: 3
-start_hub: start 0 0 [color=green]
-end_hub: goal 1 0 [color=red max_drones=3]
-connection: start-goal [max_link_capacity=3]

@@ -14,6 +14,7 @@ from typing import Any
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.artist import Artist
+from matplotlib.colors import is_color_like
 
 from renderer import Renderer
 from simulator import Simulator
@@ -86,7 +87,7 @@ class GraphicalRenderer(Renderer):
         for zone in self.simulator.graph.zones.values():
             self.ax.scatter(
                 zone.x, zone.y,
-                c=self.ZONE_COLORS[zone.zone_type],
+                c=self._zone_color(zone),
                 marker=self._zone_marker(zone),
                 s=420, edgecolors="black", zorder=2,
             )
@@ -103,6 +104,23 @@ class GraphicalRenderer(Renderer):
         if zone.is_end:
             return "*"
         return "o"
+
+    def _zone_color(self, zone: Zone) -> str:
+        """Return the fill colour for a zone marker.
+
+          A colour declared in the map ('[color=green]') wins, so a
+          hub shows its own colour instead of the grey/green of its
+          type. An absent or unknown colour falls back to the type
+          palette, so every zone is always drawn with something.
+
+          Args:
+              zone: The zone about to be drawn.
+
+          Returns: A matplotlib-understood colour string.
+          """
+        if zone.color is not None and is_color_like(zone.color):
+            return zone.color
+        return self.ZONE_COLORS[zone.zone_type]
 
     def _zone_xy(self, name: str) -> tuple[float, float]:
         """Return the (x, y) coordinates of a zone, as floats"""

@@ -6,6 +6,7 @@ from zone import Zone, ZoneType
 from graph import Graph
 from drone import Drone, DroneStatus
 from router import PathPlanner
+from connection import Connection
 
 
 @dataclass
@@ -117,9 +118,10 @@ class Simulator:
             Movements done this turn (waiting drone are omitted.)
         """
         incoming = self._count_incoming()
+        link_loads = self._link_loads_at_start()
         moves: list[Movement] = []
         for drone in self._active_drones_ordered():
-            move = self._move_one(drone, incoming)
+            move = self._move_one(drone, incoming, link_loads)
             if move is not None:
                 moves.append(move)
         return moves
@@ -143,6 +145,21 @@ class Simulator:
                 incoming[target.name] = incoming.get(target.name, 0) + 1
         return incoming
 
+    def _link_loads_at_start(self) -> dict[Connection, int]:
+        """Per-turn count of drones using each connection.
+
+          Seeded with drones still in transit from earlier turns,
+          so a single-turn normal crossing shares the same link
+          capacity budget as a multi-turn restricted transit.
+
+          Returns:
+              Map connection -> drones already using it this turn.
+        """
+        return {
+            conn: len(conn.drones_in_transit)
+            for conn in self.graph.connections
+        }
+
     def _active_drones_ordered(self) -> list[Drone]:
         """Return not-yet-arrived drones, most advanced first"""
         active = [d for d in self.drones if not d.is_arrived()]
@@ -151,7 +168,9 @@ class Simulator:
         )
 
     def _move_one(
-            self, drone: Drone, incoming: dict[str, int]
+            self, drone: Drone,
+            incoming: dict[str, int],
+            link_loads: dict[Connection, int],
     ) -> Optional[Movement]:
         """Resolve one drone's action, dispatching on its state.
 
@@ -164,8 +183,9 @@ class Simulator:
         if target is None:
             return None
         if target.zone_type == ZoneType.RESTRICTED:
-            return self._try_enter_restricted(drone, target, incoming)
-        return self._try_normal_move(drone, target)
+            return self._try_enter_restricted(drone,
+                                              target, incoming, link_loads)
+        return self._try_normal_move(drone, target, link_loads)
 
     def _finish_transit(
             self, drone: Drone, incoming: dict[str, int]
@@ -194,12 +214,14 @@ class Simulator:
     def _try_enter_restricted(
             self, drone: Drone, target: Zone,
             incoming: dict[str, int],
+            link_loads: dict[Connection, int],
     ) -> Optional[Movement]:
         """Start the 2-turn move onto the link toward a restricted.
 
-        Engages only if the link has room AND the resticted zone
-        will have a slot on arrival (occupancy + inbound < cap):
-        a drone may never wait on the link.
+        Engages only if the link is below max_link_capacity this
+        turn AND the restricted zone will have a slot on arrival
+        (occupancy + inbound < cap): a drone may never wait on the
+        link.
 
         Returns:
             The transit Movement (D<ID>-<connection>), or None
@@ -207,7 +229,9 @@ class Simulator:
         conn = self.graph.get_connection(
             drone.current_zone.name, target.name
         )
-        if conn is None or not conn.has_capacity():
+        if conn is None:
+            return None
+        if link_loads.get(conn, 0) >= conn.max_link_capacity:
             return None
         reserved = target.occupancy() + incoming.get(target.name, 0)
         if reserved >= target.max_drones:
@@ -217,10 +241,12 @@ class Simulator:
         conn.occupy(drone.id)
         drone.start_transit(conn)
         incoming[target.name] = incoming.get(target.name, 0) + 1
+        link_loads[conn] = link_loads.get(conn, 0) + 1
         return Movement(drone.id, label, is_transit=True)
 
     def _try_normal_move(
-            self, drone: Drone, target: Zone
+            self, drone: Drone, target: Zone,
+            link_loads: dict[Connection, int],
     ) -> Optional[Movement]:
         """Move a drone one step into a normal/priority zone.
 
@@ -233,8 +259,16 @@ class Simulator:
         """
         if not target.can_accept():
             return None
+        conn = self.graph.get_connection(
+            drone.current_zone.name, target.name
+        )
+        if conn is not None:
+            if link_loads.get(conn, 0) >= conn.max_link_capacity:
+                return None
         drone.current_zone.remove_drone(drone.id)
         target.add_drone(drone.id)
+        if conn is not None:
+            link_loads[conn] = link_loads.get(conn, 0) + 1
         self._advance(drone, target)
         return Movement(drone.id, target.name)
 
