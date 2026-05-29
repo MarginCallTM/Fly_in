@@ -62,7 +62,7 @@ class GraphicalRenderer(Renderer):
         self._draw_connections()
         self._draw_zones()
         self._init_drones()
-        self.ax.set_aspect("equal")
+        self._apply_aspect()
         self.ax.margins(0.15)
         self.anim = FuncAnimation(
             self.fig, self._update,
@@ -71,6 +71,18 @@ class GraphicalRenderer(Renderer):
         )
         plt.tight_layout()
         plt.show()
+
+    def _apply_aspect(self) -> None:
+        """Use an equal aspect, except on a degenerate (1D) map.
+
+        A linear map (all zones on one line) has a near-zero span on
+        one axis; 'equal' would squash it into an unreadable strip,
+        so we fall back to 'auto' in that case.
+        """
+        xs = [z.x for z in self.simulator.graph.zones.values()]
+        ys = [z.y for z in self.simulator.graph.zones.values()]
+        flat = min(max(xs) - min(xs), max(ys) - min(ys)) == 0
+        self.ax.set_aspect("auto" if flat else "equal")
 
     def _draw_connections(self) -> None:
         """Draw every connection as a thin line between two zones."""
