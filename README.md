@@ -81,6 +81,47 @@ The parser reports the **line number and the cause** for any malformed
 input (unknown zone type, duplicate connection, connection to an undefined
 zone, negative capacity, dash in a name, missing/duplicate start or end…).
 
+### Example — input → output
+
+The map below (`maps/easy/03_basic_capacity.txt`) routes 4 drones along a
+linear 4-zone path. `bottleneck` accepts at most 2 drones simultaneously
+(`max_drones=2`), so the fleet naturally splits into two waves of 2.
+
+**Input:**
+
+```
+nb_drones: 4
+
+start_hub: start       0 0 [color=green  max_drones=4]
+hub:       bottleneck  1 0 [color=orange max_drones=2]
+hub:       wide_area   2 0 [color=blue   max_drones=3]
+end_hub:   goal        3 0 [color=red    max_drones=4]
+
+connection: start-bottleneck     [max_link_capacity=4]
+connection: bottleneck-wide_area [max_link_capacity=4]
+connection: wide_area-goal       [max_link_capacity=4]
+```
+
+**Output (`python3 main.py maps/easy/03_basic_capacity.txt`):**
+
+```
+Fly-in - 4 drones, 4 turns
+Zones: start bottleneck wide_area goal
+D1-bottleneck D2-bottleneck
+D1-wide_area D2-wide_area D3-bottleneck D4-bottleneck
+D1-goal D2-goal D3-wide_area D4-wide_area
+D3-goal D4-goal
+```
+
+Reading the output turn by turn:
+
+- **Turn 1** — D1 and D2 enter `bottleneck` (capacity = 2 reached); D3 and
+  D4 wait at `start` and are omitted from the line.
+- **Turn 2** — D1/D2 advance to `wide_area`, freeing `bottleneck` for D3/D4
+  which enter simultaneously.
+- **Turn 3** — D1/D2 reach `goal`; D3/D4 move to `wide_area`.
+- **Turn 4** — D3/D4 reach `goal`. All 4 drones delivered in **4 turns**.
+
 ## Algorithm
 
 The routing is split into three cooperating stages: **find routes**,
